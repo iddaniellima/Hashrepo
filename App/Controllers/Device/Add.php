@@ -82,7 +82,10 @@ class Add{
   }
   
   private function PrepareSendEmail(){
-    $SendMail = new \App\Classes\SendMail($this->req['credentials']['identifier'], "Seu código de ativação", DB::table(TABLE_ACTIVATORS_CODE_NAME)->where('id', $this->ActivationCodeID)->value('code'));
+    $code = DB::table(TABLE_ACTIVATORS_CODE_NAME)->where('id', $this->ActivationCodeID)->value('code');
+    $name = DB::table(TABLE_USERS_NAME)->where('email', $this->req['credentials']['identifier'])->value('firstname');
+    $template = new \App\Views\Mail\Device\Add\Add($name, $code);
+    $SendMail = new \App\Classes\SendMail($this->req['credentials']['identifier'], "Seu código de ativação", $template->get_mounted_template());
     OperationLogs::Register("device/add - Code sent to user e-mail - ".time());
     Status::SuccesAddDevice("Wait for user activation.");
   }

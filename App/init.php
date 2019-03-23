@@ -1,6 +1,6 @@
 <?php
 
-//header('Content-Type: application/json');
+header('Content-Type: application/json');
 
 define('DS', DIRECTORY_SEPARATOR, true);
 define('BASE_PATH', dirname(dirname(__FILE__)).DS, TRUE);
