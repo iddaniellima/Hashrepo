@@ -8,31 +8,35 @@ use App\Classes\RequestData as RequestData;
 
 class RequestCheck{
   public $ReceivedRequestData;
+  public $data;
   
-  public function Init(){
+  public function init(){
     if(!isset(app('request')->headers['request'])){
       Status::Error("Header request is required.", 400);
-    } else if(!SecurityHelper::decode(app('request')->headers['request'])){
-      Status::Error("The header request was denied.", 403);
-    } else{
-      $this->ReceivedRequestData = json_decode(SecurityHelper::decode(app('request')->headers['request']), true);
+    } else {
+      $decode = json_decode(app('request')->headers['request'], true);
       
-      if($this->ReceivedRequestData == NULL){
+      if($decode == NULL){
         Status::Error("The header request was denied.", 403);
       } else{
-        return $this->CheckRequestClientID();
+        $this->data = $decode;
+        $this->CheckClientID();
       }
     }
   }
   
-  private function CheckRequestClientID(){
-    if(!isset($this->ReceivedRequestData['ClientID'])){
+  private function CheckClientID(){
+    if(!$this->data['ClientID']){
       Status::Error("Client ID is required.", 400);
-    } else if(!isset(SYSTEM_CLIENTS[$this->ReceivedRequestData['ClientID']])){
-      Status::Error("Client ID Not Found", 403);
+    } else if(!SecurityHelper::decode($this->data['ClientID'])) {
+      Status::Error("Non-readable request.", 403);
+    } else if(!isset(SYSTEM_CLIENTS[SecurityHelper::decode($this->data['ClientID'])])){
+      Status::Error("Invalid Client ID.", 403);
     } else{
-      RequestData::save($this->ReceivedRequestData);
+      $this->data['ClientID'] = SecurityHelper::decode($this->data['ClientID']);
+      RequestData::save($this->data);
     }
   }
+ 
   
 }
