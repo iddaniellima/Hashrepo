@@ -14,7 +14,7 @@ class Register{
   private $activation_code_id;
   
   public function init(){
-    $this->req = RequestData::$req['data'];
+    $this->req = RequestData::$req;
     
     if(!$this->VerifyRequest()[0]){
       Status::Error($this->VerifyRequest()[1], 400);

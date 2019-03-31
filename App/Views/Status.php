@@ -4,7 +4,7 @@ namespace App\Views;
 
 class Status{
   public static function Error($MSG, $HTTPCode){
-    http_response_code($HTTPCode);
+    //http_response_code($HTTPCode);
     exit('{ "status": "error", "message": "'.$MSG.'"}');
   }
   
