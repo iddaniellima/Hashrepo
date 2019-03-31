@@ -10,7 +10,7 @@ class SecurityHelper{
   public static function decode($data){
     $rsa = new RSA();
     $rsa->loadKey(file_get_contents(BASE_PATH.'App/keys/private.key'));
-    $rsa->setEncryptionMode(RSA::ENCRYPTION_PKCS1);
+    $rsa->setEncryptionMode(RSA::ENCRYPTION_OAEP);
 
     return $rsa->decrypt(base64_decode($data));
   }
