@@ -16,6 +16,10 @@ class Register{
   public function init(){
     $this->req = RequestData::$req;
     
+    if($this->verify_request()[0]){
+      
+    }
+    
     if(!$this->VerifyRequest()[0]){
       Status::Error($this->VerifyRequest()[1], 400);
     } else if(!$this->DecryptData()[0]){
@@ -92,119 +96,23 @@ class Register{
     if(DB::table(TABLE_USERS_NAME)->where('email', $this->req['credentials']['email'])->doesntExist()){
       $this->prepare_user_register();
     } else{
-      Status::Error("R0026", 409);
+      Status::Error("Desculpe, já existe uma conta com esse e-mail.", 409);
     }
   }
   
-  private function DecryptData(){
-    if(!SecurityHelper::decode($this->req['firstname'])){
-      return array(false, "R0015");
-    }
-    
-    else if(!SecurityHelper::decode($this->req['lastname'])){
-      return array(false, "R0016");
-    }
-    
-    else if(!SecurityHelper::decode($this->req['credentials']['email'])){
-      return array(false, "R0017");
-    }
-    
-    else if(!SecurityHelper::decode($this->req['security_questions'][1])){
-      return array(false, "R0018");
-    }
-    
-    else if(!SecurityHelper::decode($this->req['security_questions'][2])){
-      return array(false, "R0019");
-    }
-    
-    else if(!SecurityHelper::decode($this->req['security_questions'][3])){
-      return array(false, "R0020");
-    }
-    
-    else if(!SecurityHelper::decode($this->req['security_answers'][1])){
-      return array(false, "R0021");
-    }
-    
-    else if(!SecurityHelper::decode($this->req['security_answers'][2])){
-      return array(false, "R0022");
-    }
-    
-    else if(!SecurityHelper::decode($this->req['security_answers'][3])){
-      return array(false, "R0023");
-    }
-    
-    else if(!SecurityHelper::decode($this->req['credentials']['password'])){
-      return array(false, "R0024");
-    }
-    
-    else if(!filter_var(SecurityHelper::decode($this->req['credentials']['email']), FILTER_VALIDATE_EMAIL)){
-      return array(false, "R0025");
-    }
-    
-    else {
+  private function decrypt_data(){
+    if(!SecurityHelper::decode($this->req['firstname']) || !SecurityHelper::decode($this->req['lastname']) || !SecurityHelper::decode($this->req['credentials']['email']) || !SecurityHelper::decode($this->req['security_questions'][1]) || !SecurityHelper::decode($this->req['security_questions'][2]) || !SecurityHelper::decode($this->req['security_questions'][3]) || !SecurityHelper::decode($this->req['security_answers'][1]) || !SecurityHelper::decode($this->req['security_answers'][2]) || !SecurityHelper::decode($this->req['security_answers'][3]) || !SecurityHelper::decode($this->req['credentials']['password']) || !filter_var(SecurityHelper::decode($this->req['credentials']['email']), FILTER_VALIDATE_EMAIL)){
+      return array(false, "{ 'class': 'internal', 'message': 'invalid_crypto_method' }");
+    } else {
       return array(true);
     }
   }
   
-  private function VerifyRequest(){
-    if(!isset($this->req)){
-      return array(false, "R0001");
-    }
-    
-    else if(!isset($this->req['firstname'])){
-      return array(false, "R0002");
-    }
-    
-    else if(!isset($this->req['lastname'])){
-      return array(false, "R0003");
-    }
-    
-    else if(!isset($this->req['credentials'])){
-      return array(false, "R0004");
-    }
-    
-    else if(!isset($this->req['credentials']['email'])){
-      return array(false, "R0005");
-    }
-    
-    else if(!isset($this->req['security_questions'])){
-      return array(false, "R0006");
-    }
-    
-    else if(!isset($this->req['security_questions'][1])){
-      return array(false, "R0007");
-    }
-    
-    else if(!isset($this->req['security_questions'][2])){
-      return array(false, "R0008");
-    }
-    
-    else if(!isset($this->req['security_questions'][3])){
-      return array(false, "R0009");
-    }
-    
-    else if(!isset($this->req['security_answers'])){
-      return array(false, "R0010");
-    }
-    
-    else if(!isset($this->req['security_answers'][1])){
-      return array(false, "R0011");
-    }
-    
-    else if(!isset($this->req['security_answers'][2])){
-      return array(false, "R0012");
-    }
-    
-    else if(!isset($this->req['security_answers'][3])){
-      return array(false, "R0013");
-    }
-    
-    else if(!isset($this->req['credentials']['password'])){
-      return array(false, "R0014");
-    }
-    
-    else {
+  private function verify_request(){
+    if(isset($this->req) || isset($this->req['firstname']) || isset($this->req['lastname']) || isset($this->req['credentials']) || isset($this->req['credentials']['email']) || isset($this->req['credentials']['password']) || isset($this->req['security_questions']) || isset($this->req['security_questions'][1]) || isset($this->req['security_questions'][2]) || isset($this->req['security_questions'][3]) || isset($this->req['security_answers']) || isset($this->req['security_answers'][1]) || isset($this->req['security_answers'][2]) || isset($this->req['security_answers'][3]) ){
       return array(true);
+    } else {
+      return array(false, "{ 'class': 'internal', 'message': 'invalid_request' }");
     }
   }
 }

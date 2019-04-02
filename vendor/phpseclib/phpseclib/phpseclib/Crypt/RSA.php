@@ -2074,7 +2074,7 @@ class RSA
     {
         $x = $x->toBytes();
         if (strlen($x) > $xLen) {
-            echo('Integer too large');
+            //echo('Integer too large');
             return false;
         }
         return str_pad($x, $xLen, chr(0), STR_PAD_LEFT);
@@ -2242,7 +2242,7 @@ class RSA
     function _rsaep($m)
     {
         if ($m->compare($this->zero) < 0 || $m->compare($this->modulus) > 0) {
-            echo('Message representative out of range');
+            //echo('Message representative out of range');
             return false;
         }
         return $this->_exponentiate($m);
@@ -2260,7 +2260,7 @@ class RSA
     function _rsadp($c)
     {
         if ($c->compare($this->zero) < 0 || $c->compare($this->modulus) > 0) {
-            echo('Ciphertext representative out of range');
+            //echo('Ciphertext representative out of range');
             return false;
         }
         return $this->_exponentiate($c);
@@ -2278,7 +2278,7 @@ class RSA
     function _rsasp1($m)
     {
         if ($m->compare($this->zero) < 0 || $m->compare($this->modulus) > 0) {
-            echo('Message representative out of range');
+            //echo('Message representative out of range');
             return false;
         }
         return $this->_exponentiate($m);
@@ -2296,7 +2296,7 @@ class RSA
     function _rsavp1($s)
     {
         if ($s->compare($this->zero) < 0 || $s->compare($this->modulus) > 0) {
-            echo('Signature representative out of range');
+            //echo('Signature representative out of range');
             return false;
         }
         return $this->_exponentiate($s);
@@ -2347,7 +2347,7 @@ class RSA
         // be output.
 
         if ($mLen > $this->k - 2 * $this->hLen - 2) {
-            echo('Message too long');
+            //echo('Message too long');
             return false;
         }
 
@@ -2408,7 +2408,7 @@ class RSA
         // be output.
 
         if (strlen($c) != $this->k || $this->k < 2 * $this->hLen + 2) {
-            echo('Decryption error');
+            //echo('Decryption error');
             return false;
         }
 
@@ -2417,7 +2417,7 @@ class RSA
         $c = $this->_os2ip($c);
         $m = $this->_rsadp($c);
         if ($m === false) {
-            echo('Decryption error');
+            //echo('Decryption error');
             return false;
         }
         $em = $this->_i2osp($m, $this->k);
@@ -2447,7 +2447,7 @@ class RSA
         // we do & instead of && to avoid https://en.wikipedia.org/wiki/Short-circuit_evaluation
         // to protect against timing attacks
         if (!$hashesMatch & !$patternMatch) {
-            echo('Decryption error');
+            //echo('Decryption error');
             return false;
         }
 
@@ -2488,7 +2488,7 @@ class RSA
         // Length checking
 
         if ($mLen > $this->k - 11) {
-            echo('Message too long');
+            //echo('Message too long');
             return false;
         }
 
@@ -2545,7 +2545,7 @@ class RSA
         // Length checking
 
         if (strlen($c) != $this->k) { // or if k < 11
-            echo('Decryption error');
+            //echo('Decryption error');
             return false;
         }
 
@@ -2555,7 +2555,7 @@ class RSA
         $m = $this->_rsadp($c);
 
         if ($m === false) {
-            echo('Decryption error');
+            //echo('Decryption error');
             return false;
         }
         $em = $this->_i2osp($m, $this->k);
@@ -2563,7 +2563,7 @@ class RSA
         // EME-PKCS1-v1_5 decoding
 
         if (ord($em[0]) != 0 || ord($em[1]) > 2) {
-            echo('Decryption error');
+            //echo('Decryption error');
             return false;
         }
 
@@ -2571,7 +2571,7 @@ class RSA
         $m = substr($em, strlen($ps) + 3);
 
         if (strlen($ps) < 8) {
-            echo('Decryption error');
+            //echo('Decryption error');
             return false;
         }
 
@@ -2599,7 +2599,7 @@ class RSA
 
         $mHash = $this->hash->hash($m);
         if ($emLen < $this->hLen + $sLen + 2) {
-            echo('Encoding error');
+            //echo('Encoding error');
             return false;
         }
 
@@ -2704,7 +2704,7 @@ class RSA
         // Length checking
 
         if (strlen($s) != $this->k) {
-            echo('Invalid signature');
+            //echo('Invalid signature');
             return false;
         }
 
@@ -2715,12 +2715,12 @@ class RSA
         $s2 = $this->_os2ip($s);
         $m2 = $this->_rsavp1($s2);
         if ($m2 === false) {
-            echo('Invalid signature');
+            //echo('Invalid signature');
             return false;
         }
         $em = $this->_i2osp($m2, $modBits >> 3);
         if ($em === false) {
-            echo('Invalid signature');
+            //echo('Invalid signature');
             return false;
         }
 
@@ -2770,7 +2770,7 @@ class RSA
         $tLen = strlen($t);
 
         if ($emLen < $tLen + 11) {
-            echo('Intended encoded message length too short');
+            //echo('Intended encoded message length too short');
             return false;
         }
 
@@ -2796,7 +2796,7 @@ class RSA
 
         $em = $this->_emsa_pkcs1_v1_5_encode($m, $this->k);
         if ($em === false) {
-            echo('RSA modulus too short');
+            //echo('RSA modulus too short');
             return false;
         }
 
@@ -2825,7 +2825,7 @@ class RSA
         // Length checking
 
         if (strlen($s) != $this->k) {
-            echo('Invalid signature');
+            //echo('Invalid signature');
             return false;
         }
 
@@ -2834,12 +2834,12 @@ class RSA
         $s = $this->_os2ip($s);
         $m2 = $this->_rsavp1($s);
         if ($m2 === false) {
-            echo('Invalid signature');
+            //echo('Invalid signature');
             return false;
         }
         $em = $this->_i2osp($m2, $this->k);
         if ($em === false) {
-            echo('Invalid signature');
+            //echo('Invalid signature');
             return false;
         }
 
@@ -2847,7 +2847,7 @@ class RSA
 
         $em2 = $this->_emsa_pkcs1_v1_5_encode($m, $this->k);
         if ($em2 === false) {
-            echo('RSA modulus too short');
+            //echo('RSA modulus too short');
             return false;
         }
 
