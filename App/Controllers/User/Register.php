@@ -93,7 +93,7 @@ class Register{
     if(!$this->user_id){
       Status::render_error(503, "fatal", "service_register_unavailable");
     } else{
-      echo $this->user_id;
+      $this->create_confirmation_code();
     }
   }
   
