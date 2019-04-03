@@ -14,12 +14,14 @@ class Register{
   private $security_answers;
   
   public function init(){
+    
     if(!isset(RequestData::$req['data'])){
       Status::render_error(400, "fatal", "invalid_request");
     } else{
       $this->req = RequestData::$req['data'];
     }
     
+
     $validate = new \Particle\Validator\Validator;
     $validate->required('firstname')->string();
     $validate->required('lastname')->string();
@@ -33,13 +35,32 @@ class Register{
     $validate->required('sec_quest_3_reply')->string();
     $result = $validate->validate($this->req);
     
+    
+    /*
+    * Checa se os dados acima foram recebidos no formato string.
+    */
     if(!$result->isValid()){
       Status::render_error(400, "fatal", json_encode($result->getMessages()));
-    } else if($this->encryption_is_not_valid($this->req)){ 
+    } 
+    
+    /*
+    * Checa se o método de criptografia é válido.
+    */
+    else if($this->encryption_is_not_valid($this->req)){ 
       Status::render_error(400, "fatal", "invalid_encryption_method");
-    } else if(!$this->email_is_valid()){
+    } 
+    
+    /*
+    * Checa se o e-mail é válida e se já está registrado.
+    */
+    else if(!$this->email_is_valid()){
       Status::render_error(422, "user", "email_already_registered");
     } else{
+      
+      /*
+      * Se tudo ocorrer bem, aqui é montado os array com as perguntas e respostas de segurança, isso no formato JSON.
+      */
+      
       $this->security_answers = json_encode(array(
         "1" => password_hash($this->dec($this->req['sec_quest_1_reply']), PASSWORD_DEFAULT),
         "2" => password_hash($this->dec($this->req['sec_quest_1_reply']), PASSWORD_DEFAULT),
@@ -52,6 +73,9 @@ class Register{
         "3" => SecurityHelper::SymEncDec($this->dec($this->req['sec_quest_1']), 1)
       ));
       
+      /*
+      * Prossegue para o registro
+      */
       $this->register();
     }
   }
