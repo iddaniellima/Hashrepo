@@ -3,9 +3,9 @@
 namespace App\Views;
 
 class Status{
-  public static function Error($MSG, $HTTPCode){
-    //http_response_code($HTTPCode);
-    exit('{ "status": "error", "message": "'.$MSG.'"}');
+  public static function render_error($http_code, $class, $message){
+    http_response_code($http_code);
+    exit('{ "status": "error", "class": "'.$class.'", "message": "'.$message.'"}');
   }
   
   public static function SuccesAddDevice($msg){

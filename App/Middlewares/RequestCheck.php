@@ -26,14 +26,14 @@ class RequestCheck{
   }
   
   private function CheckClientID(){
-    if(!$this->data['ClientID']){
+    if(!$this->data['client_id']){
       Status::Error("Client ID is required.", 400);
-    } else if(!SecurityHelper::decode($this->data['ClientID'])) {
+    } else if(!SecurityHelper::decode($this->data['client_id'])) {
       Status::Error("Non-readable request.", 403);
-    } else if(!isset(SYSTEM_CLIENTS[SecurityHelper::decode($this->data['ClientID'])])){
+    } else if(!isset(SYSTEM_CLIENTS[SecurityHelper::decode($this->data['client_id'])])){
       Status::Error("Invalid Client ID.", 403);
     } else{
-      $this->data['ClientID'] = SecurityHelper::decode($this->data['ClientID']);
+      $this->data['client_id'] = SecurityHelper::decode($this->data['client_id']);
       RequestData::save($this->data);
     }
   }

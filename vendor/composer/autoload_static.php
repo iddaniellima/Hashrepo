@@ -30,6 +30,7 @@ class ComposerStaticInit8624d5ab43499c7d55a846b52eba8a4f
         array (
             'Psr\\SimpleCache\\' => 16,
             'Psr\\Container\\' => 14,
+            'Particle\\Validator\\' => 19,
             'PHPMailer\\PHPMailer\\' => 20,
         ),
         'L' => 
@@ -89,6 +90,10 @@ class ComposerStaticInit8624d5ab43499c7d55a846b52eba8a4f
         'Psr\\Container\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
+        ),
+        'Particle\\Validator\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/particle/validator/src',
         ),
         'PHPMailer\\PHPMailer\\' => 
         array (
