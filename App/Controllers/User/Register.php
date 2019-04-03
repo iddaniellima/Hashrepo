@@ -120,7 +120,7 @@ class Register{
       
       
       /* Eu poderia usar um template, porém como o sistema ainda está em desenvolvimento vou deixar em texto simples. */
-      $SendMail = new \App\Classes\SendMail($this->dec($this->req['email']), "Código de ativação: <strong>".$mail_data['code']."</strong>");
+      $SendMail = new \App\Classes\SendMail($this->dec($this->req['email']), "Ative sua conta", "Código de ativação: <strong>".$mail_data['code']."</strong>");
       
       http_response_code(201);
       exit;
