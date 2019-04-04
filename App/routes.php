@@ -1,6 +1,6 @@
 <?php
 
-$route->before('/', 'App\Middlewares\RequestCheck@init');
+$route->before('/', 'App\Middlewares\Request@init');
 
 $route->before('/device/authorize', 'App\Middlewares\Device\Authorize@Init');
 $route->before('/device/add', 'App\Middlewares\Device\Add@Init');

@@ -15,10 +15,10 @@ class Register{
   
   public function init(){
     
-    if(!isset(RequestData::$req['data'])){
+    if(!isset(app('request')->body['data'])){
       Status::render_error(400, "fatal", "invalid_request");
     } else{
-      $this->req = RequestData::$req['data'];
+      $this->req = app('request')->body['data'];
     }
     
 
