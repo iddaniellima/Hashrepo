@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Controllers\Device;
+namespace App\Controllers\User;
 use App\Views\Status as Status;
 use Illuminate\Database\Capsule\Manager as DB;
 use App\Classes\SecurityHelper as SecurityHelper;
 
-class Add{
+class Login{
   private $req;
   private $user_id;
   private $device_id;
