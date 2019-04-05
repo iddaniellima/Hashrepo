@@ -35,6 +35,21 @@ class Add{
       return true;
     }
   }
+  
+  /*
+  * Checa o status da conta.
+  */
+  private function check_account_status(){
+    $account_status = DB::table(TABLE_USERS_NAME)->where('email', $this->dec($this->req['email']))->value('account_status');
+    
+    if($account_status == "Regular"){
+      return array("status" => true);
+    } else if($account_status == "Waiting Confirmation"){
+      return array("status" => false, "message" => "account_not_activated");
+    } else if($account_status == "Blocked"){
+      return array("status" => false, "message" => "account_blocked");
+    }
+  }
 
   /*
   * Retorna true se o e-mail for válido e estiver registrado.
@@ -86,6 +101,11 @@ class Add{
     // Checa se o e-mail e senha d]ao match
     else if(!$this->password_match()){
       Status::render_error(403, "user", "invalid_password");
+    }
+    
+    // Verifica se a conta possui algum problema.
+    else if(!$this->check_account_status()["status"]){
+      Status::render_error(403, "user", $this->check_account_status()["message"]);
     }
     
     /* O cliente e usuário seguiu o requisitos iniciais. */
