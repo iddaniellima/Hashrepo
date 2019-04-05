@@ -42,7 +42,7 @@ class Add{
   private function email_is_valid(){
     if(!filter_var($this->dec($this->req['email']), FILTER_VALIDATE_EMAIL)){
       return false;
-    } else (DB::table(TABLE_USERS_NAME)->where('email', $this->dec($this->req['email']))->exists()){
+    } else if (DB::table(TABLE_USERS_NAME)->where('email', $this->dec($this->req['email']))->exists()){
       return true;
     }
   }
