@@ -3,7 +3,7 @@
 $route->before('/', 'App\Middlewares\Request@init');
 
 $route->before('/device/authorize', 'App\Middlewares\Device\Authorize@Init');
-$route->before('/device/add', 'App\Middlewares\Device\Add@Init');
+//$route->before('/device/add', 'App\Middlewares\Device\Add@Init');
 
 use App\Classes\SecurityHelper as SecurityHelper;
 $route->group('/device', function(){

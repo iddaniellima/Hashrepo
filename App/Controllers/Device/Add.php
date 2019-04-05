@@ -2,91 +2,151 @@
 
 namespace App\Controllers\Device;
 use App\Views\Status as Status;
-use App\Classes\RequestData as RequestData;
-use App\Classes\OperationLogs as OperationLogs;
 use Illuminate\Database\Capsule\Manager as DB;
+use App\Classes\SecurityHelper as SecurityHelper;
 
 class Add{
-  private $device_id;
-  private $password;
-  private $ActivationCodeID;
+  private $req;
   private $user_id;
+  private $device_id;
+  
+  private function dec($p){
+    return SecurityHelper::decode($p);
+  }
+  
+  /*
+  * Retorna true se o sistema não conseguir decodificar a string. 
+  */
+  private function encryption_is_not_valid($params){
+    foreach($params as $param){
+      if(!SecurityHelper::decode($param)){
+        return true;
+      }
+    }
+  }
+
+  /*
+  * Retorna true se a senha for válida.
+  */
+  private function password_match(){
+    if(!password_verify($this->dec($this->req['password']), DB::table(TABLE_USERS_NAME)->where('email', $this->dec($this->req['email']))->value('password'))){
+      return false;
+    } else{
+      return true;
+    }
+  }
+
+  /*
+  * Retorna true se o e-mail for válido e estiver registrado.
+  */
+  private function email_is_valid(){
+    if(!filter_var($this->dec($this->req['email']), FILTER_VALIDATE_EMAIL)){
+      return false;
+    } else (DB::table(TABLE_USERS_NAME)->where('email', $this->dec($this->req['email']))->exists()){
+      return true;
+    }
+  }
   
   public function init(){
-    OperationLogs::Register("device/add - Started - ".time());
-    $this->req = RequestData::$req;
-    $this->CheckForIdentifierExistence();
-  }
-  
-  private function CheckForIdentifierExistence(){
-    if(DB::table(TABLE_USERS_NAME)->where('email', $this->req['credentials']['identifier'])->doesntExist()){
-      OperationLogs::Register("device/add - Identifier not found ".time());
-      Status::Error("Identifier not found.", 403);
+    if(!isset(app('request')->body['data'])){
+      Status::render_error(400, "fatal", "invalid_request");
     } else{
-      $this->password = DB::table(TABLE_USERS_NAME)->where('email', $this->req['credentials']['identifier'])->value('password');
-      $this->VerifyPassword();
+      $this->req = app('request')->body['data'];
+    }
+    
+    
+    $validate = new \Particle\Validator\Validator;
+    $validate->required('email')->string();
+    $validate->required('password')->string();
+    $validate->required('device_mac')->string();
+    $validate->required('device_manufacturer')->string();
+    $validate->required('device_arch')->string();
+    $validate->required('device_model')->string();
+    $validate->required('device_platform')->string();
+    $validate->required('device_system')->string();
+    $result = $validate->validate($this->req);
+    
+    /*
+    * Checa se os dados acima foram recebidos no formato string.
+    */
+    if(!$result->isValid()){
+      Status::render_error(400, "fatal", json_encode($result->getMessages()));
+    } 
+    
+    // Checa se o método de criptografia é válido.
+    else if($this->encryption_is_not_valid($this->req)){ 
+      Status::render_error(400, "fatal", "invalid_encryption_method");
+    } 
+    
+    // Checa se o e-mail existe.
+    else if(!$this->email_is_valid()){
+      Status::render_error(403, "user", "invalid_email");
+    } 
+    
+    // Checa se o e-mail e senha d]ao match
+    else if(!$this->password_match()){
+      Status::render_error(403, "user", "invalid_password");
+    }
+    
+    /* O cliente e usuário seguiu o requisitos iniciais. */
+    else{
+      $this->user_id = DB::table(TABLE_USERS_NAME)->where('email', $this->dec($this->req['email']))->value('id');
+      $this->check_device();
     }
   }
   
-  private function VerifyPassword(){
-    if(!password_verify($this->req['credentials']['password'], $this->password)){
-      OperationLogs::Register("device/add - Invalid password - ".time());
-      Status::Error("Invalid password.", 403);
+  /*
+  * Verifica se já existem dispositivos registrados com o mesmo, se sim, exclui e prossegue.
+  * Provavelmente vai mudar por questões de segurança.
+  */
+  private function check_device(){
+    if(DB::table(TABLE_DEVICES_NAME)->where('device_mac', $this->dec($this->req['device_mac']))->doesntExist()){
+      $this->insert_device();
     } else{
-      OperationLogs::Register("device/add - Credentials OK - ".time());
-      $this->user_id = DB::table(TABLE_USERS_NAME)->where('email', $this->req['credentials']['identifier'])->value('id');
-      $this->checkDevices();
+      DB::table(TABLE_DEVICES_NAME)->where('uid', $this->user_id)->where('device_mac', $this->dec($this->req['device_mac']))->delete();
+      $this->insert_device();
     }
   }
   
-  private function checkDevices(){
-    if(DB::table(TABLE_DEVICES_NAME)->where('deviceID',$this->req['deviceData']['deviceID'])->doesntExist()){
-      $this->InsertDevice();
-    } else{
-      DB::table(TABLE_DEVICES_NAME)->where('uid', $this->user_id)->where('deviceID', $this->req['deviceData']['deviceID'])->delete();
-      $this->InsertDevice();
-    }
-  }
-  
-  private function InsertDevice(){
+  private function insert_device(){
     $this->device_id = DB::table(TABLE_DEVICES_NAME)->insertGetId([
       'uid' => $this->user_id, 
       'hash' => hash('sha512', time().$this->device_id.SYSTEM_GLOBAL_SALT),
-      'clientID' => $this->req['ClientID'],
-      'deviceID' => $this->req['deviceData']['deviceID'],
-      'deviceName' => $this->req['deviceData']['deviceName'],
-      'deviceModel' => $this->req['deviceData']['deviceModel'],
-      'deviceSystem' => $this->req['deviceData']['deviceSystem'],
-      'deviceLastIP' => app('request')->ip(),
-      'Status' => "Waiting Confirmation",
-      'ExpiresIn' => time()+2592000]
+      'client_id' => app('request')->body['client_id'],
+      'device_mac' => $this->dec($this->req['device_mac']),
+      'device_manufacturer' => $this->dec($this->req['device_manufacturer']),
+      'device_model' => $this->dec($this->req['device_model']),
+      'device_arch' => $this->dec($this->req['device_arch']),
+      'device_platform' => $this->dec($this->req['device_platform']),
+      'device_system' => $this->dec($this->req['device_system']),
+      'device_last_ip_access' => app('request')->ip(),
+      'status' => "Waiting Confirmation",
+      'expiry' => time()+2592000]
     );
     
-    OperationLogs::Register("device/add - Added Device ID ".$this->device_id." - ".time());
-    
-    $this->CreateActivationCode();
+    if(!$this->device_id){
+      Status::render_error(503, "fatal", "service_unavailable");
+    } else{
+      
+      // Se não correu nenhum erro, prossegue para o gerador de código de ativação.
+      $this->create_activation_code();
+    }
   }
   
-  private function CreateActivationCode(){
-    $this->ActivationCodeID = DB::table(TABLE_ACTIVATORS_CODE_NAME)->insertGetId([
+  private function create_activation_code(){
+    $activation_code_id = DB::table(TABLE_ACTIVATORS_CODE_NAME)->insertGetId([
       'device_id' => $this->device_id,
       'user_id' => $this->user_id,
       'code' => bin2hex(random_bytes(3)),
       'ExpiresIn' => time()+900]
     );
     
-    OperationLogs::Register("device/add - Created Activation Code ".$this->ActivationCodeID." For Device ".$this->device_id." - ".time());
+    // Envia o e-mail com o código de autorização para o usuário
     
-    $this->PrepareSendEmail();
+    $code = DB::table(TABLE_ACTIVATORS_CODE_NAME)->where('id', $activation_code_id)->value('code');
+    $SendMail = new \App\Classes\SendMail($this->dec($this->req['email']), "Ative o dispositivo", "Aqui está o código para ativar seu dispositivo: ".$code);
     
-  }
-  
-  private function PrepareSendEmail(){
-    $code = DB::table(TABLE_ACTIVATORS_CODE_NAME)->where('id', $this->ActivationCodeID)->value('code');
-    $name = DB::table(TABLE_USERS_NAME)->where('email', $this->req['credentials']['identifier'])->value('firstname');
-    $template = new \App\Views\Mail\Device\Add\Add($name, $code);
-    $SendMail = new \App\Classes\SendMail($this->req['credentials']['identifier'], "Seu código de ativação", $template->get_mounted_template());
-    OperationLogs::Register("device/add - Code sent to user e-mail - ".time());
-    Status::SuccesAddDevice("Wait for user activation.");
+    http_response_code(201);
+    exit;
   }
 }
