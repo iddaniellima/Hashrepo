@@ -7,5 +7,6 @@ $route->group('/user', function(){
   
  $this->group('/login', function(){
    $this->post('/', 'App\Controllers\User\Login@init');
+   $this->post('/authorize', 'App\Controllers\User\AuthorizeLogin@init');
  });
 });

@@ -3,7 +3,7 @@
 namespace App\Controllers\User;
 use App\Views\Status as Status;
 use Illuminate\Database\Capsule\Manager as DB;
-use App\Classes\SecurityHelper as SecurityHelper
+use App\Classes\SecurityHelper as SecurityHelper;
 
 class AuthorizeLogin{
   private $req;
@@ -32,14 +32,14 @@ class AuthorizeLogin{
   private function check_code(){
     
     // Checa se o código existe
-    if(!DB::table(LOGIN_CODES_TABLE_NAME)->where('code', $this->dec($this->req['code']))->exists()){
+    if(!DB::table(TABLE_ACTIVATORS_CODE_NAME)->where('code', $this->dec($this->req['code']))->exists()){
       return array("status" => false, "message" => "the_code_does_not_exist");
     } 
     
     // Adiciona o id do usuário na variável.
     else {
-      $this->user_id = DB::table(LOGIN_CODES_TABLE_NAME)->where('code', $this->dec($this->req['code']))->value('uid');
-      $this->device_id = DB::table(LOGIN_CODES_TABLE_NAME)->where('code', $this->dec($this->req['code']))->value('device_id');
+      $this->user_id = DB::table(TABLE_ACTIVATORS_CODE_NAME)->where('code', $this->dec($this->req['code']))->value('user_id');
+      $this->device_id = DB::table(TABLE_ACTIVATORS_CODE_NAME)->where('code', $this->dec($this->req['code']))->value('device_id');
       
       // Checa se a senha coincide com a do dono do código.
       if(!password_verify($this->dec($this->req['password']), DB::table(TABLE_USERS_NAME)->where('id', $this->user_id)->value('password'))){
@@ -47,7 +47,7 @@ class AuthorizeLogin{
       } 
       
       // Checa se o código já expirou
-      else if(time() > DB::table(LOGIN_CODES_TABLE_NAME)->where('code', $this->dec($this->req['code']))->value('expiry')){
+      else if(time() > DB::table(TABLE_ACTIVATORS_CODE_NAME)->where('code', $this->dec($this->req['code']))->value('ExpiresIn')){
         return array("status" => false, "message" => "the_code_has_expired");
       } 
       
@@ -70,8 +70,8 @@ class AuthorizeLogin{
     } else {
       
       // Deleta o código após ativar o dispositivo.
-      DB::table(LOGIN_CODES_TABLE_NAME)->where('code', $this->dec($this->req['code']))->delete();  
-      return array("status" => false);
+      DB::table(TABLE_ACTIVATORS_CODE_NAME)->where('code', $this->dec($this->req['code']))->delete();  
+      return array("status" => true);
     }
   }
   
@@ -105,7 +105,7 @@ class AuthorizeLogin{
     
     // Ativa o dispositivo e deleta o código.
     else if(!$this->update()["status"]){
-      Status::render_error(503, "fatal", $this->update()["message"]);.
+      Status::render_error(503, "fatal", $this->update()["message"]);
     } 
     
     // Envia o token para o cliente.
