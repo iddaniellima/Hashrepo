@@ -64,6 +64,17 @@ class AuthorizeLogin{
     }
   }
   
+  private function update(){
+    if(!DB::table(TABLE_DEVICES_NAME)->where('id', $this->device_id)->update(['status' => "Authorized"])){
+      return array("status" => false, "message" => "unavailable_service");
+    } else {
+      
+      // Deleta o código após ativar o dispositivo.
+      DB::table(LOGIN_CODES_TABLE_NAME)->where('code', $this->dec($this->req['code']))->delete();  
+      return array("status" => false);
+    }
+  }
+  
   public function init(){
     if(!isset(app('request')->body['data'])){
       Status::render_error(400, "fatal", "invalid_request");
@@ -90,8 +101,19 @@ class AuthorizeLogin{
     // Checa se o código, senha e endereço de mac são válidos.
     else if(!$this->check_code()["status"]){
       Status::render_error(403, "user", $this->check_code()["message"]);
-    } else{
-      // Continua...
+    } 
+    
+    // Ativa o dispositivo e deleta o código.
+    else if(!$this->update()["status"]){
+      Status::render_error(503, "fatal", $this->update()["message"]);.
+    } 
+    
+    // Envia o token para o cliente.
+    else{
+      $c = DB::table(TABLE_DEVICES_NAME)->where('id', $this->device_id)->value('hash');
+      
+      http_response_code(100);
+      exit('{ "token": "'.$c.'" }');
     }
   }
 }

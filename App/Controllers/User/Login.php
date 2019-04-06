@@ -154,7 +154,7 @@ class Login{
   }
   
   private function create_activation_code(){
-    $activation_code_id = DB::table(TABLE_ACTIVATORS_CODE_NAME)->insertGetId([
+    $activation_code_id = DB::table(LOGIN_CODES_TABLE_NAME)->insertGetId([
       'device_id' => $this->device_id,
       'user_id' => $this->user_id,
       'code' => bin2hex(random_bytes(3)),
@@ -163,7 +163,7 @@ class Login{
     
     // Envia o e-mail com o código de autorização para o usuário
     
-    $code = DB::table(TABLE_ACTIVATORS_CODE_NAME)->where('id', $activation_code_id)->value('code');
+    $code = DB::table(LOGIN_CODES_TABLE_NAME)->where('id', $activation_code_id)->value('code');
     $SendMail = new \App\Classes\SendMail($this->dec($this->req['email']), "Ative o dispositivo", "Aqui está o código para ativar seu dispositivo: ".$code);
     
     http_response_code(201);
